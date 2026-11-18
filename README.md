@@ -1,1 +1,1 @@
-# SEO-Digital-Marketing-Strategist
+# SEO Digital
