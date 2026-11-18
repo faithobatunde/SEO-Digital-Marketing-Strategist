@@ -184,6 +184,12 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 .fa-portrait{display:block;width:100%;max-width:365px;height:auto;border-radius:5px}
 .fa-summary{background:#f7f1e6;padding-block:clamp(26px,4vw,45px)}
 @media(max-width:670px){.fa-profile{grid-template-columns:1fr}.fa-portrait{max-width:280px}}
+
+.fa-case-dialog{padding:0;border:0;border-radius:12px;width:min(1100px,calc(100% - 32px));max-width:none;max-height:calc(100dvh - 32px);background:#fff;color:inherit;overflow:auto;overscroll-behavior:contain}
+.fa-case-dialog::backdrop{background:#102d35b8}
+.fa-dialog-bar{position:sticky;top:0;z-index:1;display:flex;justify-content:flex-end;padding:8px 16px;background:#fffdf9;border-bottom:1px solid #ddd}
+.fa-dialog-close{border:1px solid #24584d;border-radius:4px;background:#fffdf9;color:#173b43;padding:8px 12px;font:inherit;font-weight:800;cursor:pointer}
+body:has(.fa-case-dialog[open]){overflow:hidden}
 </style></head>
 <body class="fo-page">
 <header class="fo-header"><div class="fo-wrap fo-top"><a class="fo-brand" href="#home">Faith Obatunde</a><nav class="fo-nav" aria-label="Main"><a href="#home" data-tab="home">Home</a><a href="#projects" data-tab="projects">Projects</a><a href="#contact" data-tab="contact">Contact</a></nav></div></header>
@@ -250,6 +256,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 <div class="fo-wrap"><a class="fo-next" href="#projects"><span>Browse all projects</span><span aria-hidden="true">↗</span></a></div>
 </div><div class="fa-view" id="contact" hidden><section class="fo-mast"><div class="fo-wrap"><h1>Get in <em>touch</em></h1><p>Contact Faith Obatunde about SEO, digital marketing, and website projects.</p></div></section><section class="fo-band fo-leadership" aria-labelledby="fa-about-contact"><div class="fo-wrap fo-grid fa-profile"><img class="fa-portrait" src="./portrait.png" alt="Portrait of Faith Obatunde" width="365" height="358" loading="lazy"><div><h2 id="fa-about-contact">A little about me</h2><p>Hi again! I’m Faith. I’m naturally curious, very particular about the details, and I love figuring out how to make things work better. Whether it’s finding an SEO opportunity, improving a website or helping someone grow their skills, I enjoy the process just as much as the results.</p><p>I believe there’s always something new to learn and a better way to approach a challenge. If you have a project, an opportunity or simply want to connect, I’d love to hear from you.</p></div></div></section><section class="fo-band fo-search"><div class="fo-wrap fo-grid"><h2>Contact Faith</h2><div><div class="fa-contact-actions"><a class="fa-contact-button" href="mailto:faithobatundeg@gmail.com">Email Faith</a><a class="fa-contact-button" href="tel:+2349039392523">Call Faith</a></div><p><a class="fo-case" href="https://www.linkedin.com/in/faith-obatunde">Connect on LinkedIn ↗</a></p></div></div></section><div class="fo-wrap fa-footer"><a href="#home">← Back home</a><a href="#projects">Explore projects ↗</a></div></div>
 </main>
+<dialog class="fa-case-dialog" aria-label="Case study">
+  <form method="dialog" class="fa-dialog-bar"><button class="fa-dialog-close" autofocus>Close case study ×</button></form>
+  <div class="fa-dialog-content"></div>
+</dialog>
 <script>
 const views = [...document.querySelectorAll(".fa-view")];
 const titles = {home: "Home", projects: "Projects & Case Studies", auxilum: "Auxilum Interactive", yingo: "Yingo Limited", elsalagos: "ElsaLagos", mmmw: "My Marriage Must Work", henok: "Henok Oil", contact: "Contact"};
@@ -264,6 +274,63 @@ function showView() {
   document.title = titles[view] + " | Faith Obatunde";
   window.scrollTo(0, 0);
 }
-addEventListener("hashchange", showView);
+
+const caseIds = new Set(["auxilum", "yingo", "elsalagos", "mmmw", "henok"]);
+const dialog = document.querySelector(".fa-case-dialog");
+const dialogContent = dialog.querySelector(".fa-dialog-content");
+let activeCase;
+let originalPlace;
+let openingLink;
+
+function restoreCase() {
+  if (!activeCase) return;
+  activeCase.hidden = true;
+  originalPlace.replaceWith(activeCase);
+  activeCase = undefined;
+}
+
+function openCase(id, link) {
+  const panel = document.getElementById(id);
+  if (panel === activeCase) return;
+  if (!dialog.open) openingLink = link;
+  restoreCase();
+  originalPlace = document.createComment("case study position");
+  panel.before(originalPlace);
+  dialogContent.append(panel);
+  activeCase = panel;
+  panel.hidden = false;
+  dialog.setAttribute("aria-label", titles[id] + " case study");
+  if (!dialog.open) dialog.showModal();
+  dialog.scrollTop = 0;
+  dialog.querySelector(".fa-dialog-close").focus({preventScroll:true});
+}
+
+document.addEventListener("click", event => {
+  if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  const link = event.target.closest('a[href^="#"]');
+  if (!link) return;
+  const destination = link.getAttribute("href").slice(1);
+  if (caseIds.has(destination) && typeof dialog.showModal === "function") {
+    event.preventDefault();
+    openCase(destination, link);
+  } else if (dialog.open && dialog.contains(link)) {
+    dialog.close();
+    if (location.hash === link.hash) event.preventDefault();
+  }
+});
+
+dialog.addEventListener("close", () => {
+  restoreCase();
+  if (openingLink?.isConnected) openingLink.focus({preventScroll:true});
+  openingLink = undefined;
+});
+
+addEventListener("hashchange", () => {
+  if (dialog.open) {
+    restoreCase();
+    dialog.close();
+  }
+  showView();
+});
 showView();
 </script></body></html>
